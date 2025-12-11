@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reel generado</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h2>Your summary is ready!</h2>
+
+    <video width="400" controls>
+        <source src="{{ output_video }}" type="video/mp4">
+        Looks like your browser doesn't support HTML5.
+    </video>
+
+    <p><a href="{{ output_video }}" download>Download video</a></p>
+</body>
+</html>

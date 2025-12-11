@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Travel Video Summarizer</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h2>Upload your day trip videos here!</h2>
+
+    <form action="/YourVideoIsReady" method="post" enctype="multipart/form-data">
+        <input type="file" name="videos" multiple required>
+        <button type="submit">Generate Travel Summary</button>
+    </form>
+
+</body>
+</html>
