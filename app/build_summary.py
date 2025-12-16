@@ -1,4 +1,14 @@
-""" SCRIPT CLI (Command Line Interface) """
+#*******************************************************************************
+# MODULE WITH THE FUNCTIONS FOR VIDEO PROCESSING - PIPELINE - NON EXECUTABLE
+#*******************************************************************************
+""" 
+This module contains the following functions:
+- available_vids: checks which videos are available in the videos data folder.
+- load_and_normalize_vids: returns a list of normalized clips.
+- select_clips: selects the clips that will be concatenated.
+- concatenate_clips: concatenates the selected clips and exports the resulting video to a given path.
+- build_travel_summary: wraps up the previous functions into one, to get the final result.
+"""
 
 #*******************************************************************************
 # Imports:
@@ -11,7 +21,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import IPython.display as ipd
 import moviepy
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy.editor import (VideoFileClip, 
+                            concatenate_videoclips,
+                            AudioFileClip,
+                            CompositeAudioClip)
+from moviepy.audio.fx import all as afx  # for audio_loop
 from dataclasses import dataclass
 
 # There is a conflict between moviepy and the current version of PIL.
@@ -40,22 +54,6 @@ TARGET_RESOLUTION = REEL_RESOLUTION # Current working resolution.
 MIN_CLIP_LENGTH = 2
 MAX_CLIP_LENGTH = 10
 MAX_TOTAL_LENGTH = 60
-
-#*******************************************************************************
-# ImportantPaths:
-#*******************************************************************************
-
-PATH_BASE_DIR = Path(__file__).resolve().parent.parent # Path to the base directory of the project. 
-# __file__: Path current file
-# .resolve(): Converts the path to the absolute path.
-
-PATH_CONVERTED = PATH_BASE_DIR / r"data/Converted" # Folder where the videos are stored.
-PATH_OUTPUT = PATH_BASE_DIR / r"data/Output" # Folder where the concatenated videos are stored.
-
-print(f'- Current working directory: {PATH_BASE_DIR}\n')
-print(f"- Path Base Dir: {PATH_BASE_DIR}\n")
-print(f"- Path Input Dir: {PATH_CONVERTED}\n")
-print(f"- Path Output Dir: {PATH_OUTPUT}\n")
 
 #*******************************************************************************
 # Functions:
@@ -269,22 +267,62 @@ def arrange_best_segments(segments: list[Segment],
 #-------------------------------------------------------------------------------
 
 """ This function concatenates the selected clips and exports the resulting video to a given path. """
-def concat_and_export(clips : list, export_path : Path, fps=30) -> None:
+def concat_and_export(clips : list, 
+                      export_path : Path, 
+                      fps=30, bg_music_path: Path | None = None,
+                      original_vol: float = 0.3,
+                      music_vol: float = 1.0) -> None:
+    
+    music_clip, music_loop, mixed_audio = None, None, None
+    
     try:
         if len(clips) == 0:
             raise ValueError("No clips selected.")
         
         final_clip = concatenate_videoclips(clips, method="compose")
+        
+        # Add background audio -------------------------------------------------
+        if bg_music_path is not None and bg_music_path.exists():
+            print(f"Background music: {bg_music_path.name}")
+            
+            duration = final_clip.duration    # Length final concat vid.
+            original_audio = final_clip.audio # Original audio whole concat vid.
+            if original_audio is not None:
+                original_audio = original_audio.volumex(original_vol)
+            
+            # load song
+            music_clip = AudioFileClip(str(bg_music_path))
+        
+            # Loop song if it is shorter than the video
+            music_loop = afx.audio_loop(music_clip, duration=duration)
+            music_loop = music_loop.volumex(music_vol)
+            
+            # combinar audios
+            if original_audio is not None:
+                mixed_audio = CompositeAudioClip([original_audio, music_loop])
+            else:
+                mixed_audio = music_loop
+
+            final_clip = final_clip.set_audio(mixed_audio)
+            
+        else:
+            print("No background music.")
+        #-----------------------------------------------------------------------
+        
         final_clip.write_videofile(str(export_path), 
                                 fps=fps, 
                                 codec="libx264", 
                                 audio_codec="aac")
         final_clip.close()
     
-    # Here is where the previously opened clips are closed, no matter if an error occurs or not:
+    # Here is where the previously opened clips and audio files are closed, no matter if an error occurs or not:
     finally:   
         for c in clips:
             c.close()
+            
+        for au in (mixed_audio, music_loop, music_clip):
+            if au is not None:
+                au.close()
             
 #-------------------------------------------------------------------------------
 
@@ -293,7 +331,8 @@ def build_travel_summary_smart(video_dir: Path,
                                output_path: Path, 
                                target_resolution=(720, 1280), 
                                segment_length: float = 6.0 , 
-                               max_total_duration: float = 75.0,
+                               max_total_duration: float = 85.0,
+                               bg_music_path: Path | None = None,
                                fps: int = 30) -> None:
     
     video_paths = available_vids(video_dir)
@@ -303,14 +342,11 @@ def build_travel_summary_smart(video_dir: Path,
     clips = load_and_normalize_vids(video_dir, target_resolution)
     
     segments = extract_best_segment_per_clip(clips, segment_length=segment_length)
-    selected_clips = arrange_best_segments(
-        segments,
-        max_total_duration=max_total_duration
-    )
+    
+    selected_clips = arrange_best_segments(segments,
+                                           max_total_duration=max_total_duration)
 
-    concat_and_export(selected_clips, output_path, fps=fps) 
-
-#-------------------------------------------------------------------------------
-
-if __name__ == "__main__":
-    build_travel_summary_smart(PATH_CONVERTED, PATH_OUTPUT / "summary_CLI.mp4")
+    concat_and_export(selected_clips, 
+                      output_path, 
+                      fps=fps, 
+                      bg_music_path=bg_music_path) 

@@ -5,6 +5,15 @@ Users upload raw daily videos, and the backend processes them into a polished hi
 
 ---
 
+## Quickstart / How to run
+
+Running the API: uvicorn app.main:app --reload
+
+Running the preprocessing scripts: python -m scripts.concat_videos
+
+(run from the root directory of the project)
+
+
 ## 🎒 Project Overview
 
 ### Features

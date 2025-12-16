@@ -8,7 +8,11 @@
     <h2>Upload your day trip videos here!</h2>
 
     <form action="/YourVideoIsReady" method="post" enctype="multipart/form-data">
-        <input type="file" name="videos" multiple required>
+        <input type="file" name="videos" multiple required> <!--Multiple videos are required.-->
+
+        <p>Upload your song (optional):</p>
+        <input type="file" name="music">
+
         <button type="submit">Generate Travel Summary</button>
     </form>
 
