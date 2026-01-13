@@ -1,7 +1,10 @@
 # Git ignore rules
 
-# Data Folder
+# Data Folder:
 data/
 
-# Docs Folder
+# Docs Folder:
 docs/
+
+# Windows hidden files:
+desktop.ini
