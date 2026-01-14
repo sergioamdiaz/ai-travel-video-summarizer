@@ -38,6 +38,7 @@ Running the preprocessing scripts: python -m scripts.concat_videos
 
 ## 📂 Project Structure
 
+```
 project/
 │── app/
 │ ├── main.py # FastAPI routes
@@ -52,3 +53,4 @@ project/
 │ └── raw_videos/ # User uploads (not included)
 │── output/
 │── README.md
+```
