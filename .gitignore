@@ -1,4 +1,4 @@
-# Git ignore rules
+# AI Travel Video Summarizer - Git ignore rules
 
 # Data Folder:
 data/
@@ -8,3 +8,24 @@ docs/
 
 # Windows hidden files:
 desktop.ini
+
+# Trained Models:
+Notebooks/efficientdet_car_pedestrian.keras
+*.keras
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Jupyter (auto backups)
+.ipynb_checkpoints/
+
+# VSCode (local setup)
+.vscode/
+
+# MacOS extra
+.DS_Store
+
+# Cache general
+.cache/
